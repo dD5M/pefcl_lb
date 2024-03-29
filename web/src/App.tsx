@@ -22,6 +22,7 @@ import Deposit from './views/Deposit/Deposit';
 import { fetchNui } from '@utils/fetchNui';
 import Withdraw from './views/Withdraw/Withdraw';
 import { useNuiEvent } from '@hooks/useNuiEvent';
+import { useLbPhoneSettings } from '@hooks/useLbPhoneSettings';
 
 dayjs.extend(updateLocale);
 
@@ -49,6 +50,7 @@ const App: React.FC = () => {
   const [hasLoaded, setHasLoaded] = useState(process.env.NODE_ENV === 'development');
   const [isAtmVisible, setIsAtmVisible] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const lbPhoneSettings = useLbPhoneSettings();
 
   useNuiEvent('PEFCL', UserEvents.Loaded, () => setHasLoaded(true));
   useNuiEvent('PEFCL', UserEvents.Unloaded, () => setHasLoaded(false));
@@ -67,12 +69,14 @@ const App: React.FC = () => {
   useExitListener();
 
   useEffect(() => {
-    i18n.changeLanguage(config?.general?.language).catch((e) => console.error(e));
-  }, [i18n, config]);
+    i18n
+      .changeLanguage(lbPhoneSettings?.locale ?? config?.general?.language ?? 'en')
+      .catch((e) => console.error(e));
+  }, [i18n, config, lbPhoneSettings]);
 
   useEffect(() => {
-    dayjs.locale(config?.general?.language ?? 'en');
-  }, [i18n, config]);
+    dayjs.locale(lbPhoneSettings?.locale ?? config?.general?.language ?? 'en');
+  }, [i18n, config, lbPhoneSettings]);
 
   if (!hasLoaded) {
     return null;
@@ -82,7 +86,7 @@ const App: React.FC = () => {
     <>
       {process.env.NODE_ENV === 'development' && <Devbar />}
 
-      <React.Suspense fallback={'Loading bank'}>
+      <React.Suspense fallback={null}>
         {!isAtmVisible && isVisible && (
           <Container>
             <Content>
